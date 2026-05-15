@@ -1,0 +1,16 @@
+# Ambientes Virtuais
+venv/
+env/
+.venv/
+
+# Cache do Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Arquivos de Log gerados pelo nosso sistema
+orange_pi_log.txt
+
+# Arquivos do SO
+.DS_Store
+Thumbs.db
