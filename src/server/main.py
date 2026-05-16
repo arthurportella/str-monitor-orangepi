@@ -85,10 +85,21 @@ def handle_client(conn, addr):
                     resposta = {"message": "Log gravado imediatamente."}
 
                 elif comando == "STRESS_TEST":
-                    with monitor.lock:
-                        monitor.temperature = 95.0 # Eleva a temperatura artificialmente
-                        monitor.condition.notify_all() # ACORDA A THREAD 4 IMEDIATAMENTE
-                    resposta = {"message": "Teste de estresse disparado! Acompanhe o terminal do servidor."}
+                    def apply_stress():
+                        with monitor.lock:
+                            monitor.is_stress_testing = True # Block real sensors
+                            monitor.temperature = 95.0
+                            monitor.condition.notify_all()
+                        
+                        time.sleep(15) # Hold the heat for 15 seconds!
+                        
+                        with monitor.lock:
+                            monitor.is_stress_testing = False # Let real sensors work again
+                            
+                    # Start the stress test in the background so the GUI doesn't freeze!
+                    threading.Thread(target=apply_stress, daemon=True).start()
+                    
+                    resposta = {"message": "Stress test at 95C activated for 15 seconds!"}
 
                 # Codifica o dicionário para JSON e envia de volta ao cliente
                 conn.sendall((json.dumps(resposta) + "\n").encode('utf-8'))

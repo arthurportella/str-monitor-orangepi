@@ -12,6 +12,7 @@ class OrangePiMonitor:
         self.temperature = 0.0
         self.fan_status = "OFF"
         self.temp_limit = 70.0 # Reduzido para um limite real de segurança
+        self.is_stress_testing = False
         
         # Sincronização
         self.lock = threading.Lock()
@@ -29,18 +30,17 @@ class OrangePiMonitor:
             return 0.0
 
     def sensor_thread_logic(self):
-        """Thread Periódica 1: Lê sensores reais a cada 2s"""
+        """Thread 2: Reads real sensors every 2 seconds"""
         while True:
             with self.lock:
-                # Coleta de dados reais
                 self.cpu_usage = psutil.cpu_percent(interval=None)
                 self.ram_usage = psutil.virtual_memory().percent
-                self.temperature = self._read_cpu_temp()
                 
-                # Log interno para depuração no terminal do servidor
-                # print(f"[SENSORS] CPU: {self.cpu_usage}% | Temp: {self.temperature}°C")
+                # ONLY read real temp if we are not stress testing!
+                if not self.is_stress_testing:
+                    self.temperature = self._read_cpu_temp()
                 
-                # Notifica a Thread de Proteção se o limite for atingido
+                # Notify the Protection Thread if the limit is exceeded
                 if self.temperature > self.temp_limit:
                     self.condition.notify_all()
             
