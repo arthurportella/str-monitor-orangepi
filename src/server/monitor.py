@@ -46,27 +46,31 @@ class OrangePiMonitor:
             
             time.sleep(2)
 
-    def protection_thread_logic(self):
+def protection_thread_logic(self):
         """Thread 4: Proteção Térmica baseada em Variável de Condição"""
         while True:
+            # 1. Wait for the alarm inside the condition block
             with self.condition:
-                self.condition.wait() # Aguarda o notify da thread de sensores
-                
-                with self.lock:
-                    self.fan_status = "ON"
-                
+                self.condition.wait() # Sleeps and releases the lock
+                # When it wakes up, it holds the lock again!
+                self.fan_status = "ON"
                 print(f"!!! ALERTA TÉRMICO: {self.temperature:.1f}°C !!!")
+            
+            # 2. EXIT the condition block IMMEDIATELY to release the lock!
+            # Now other threads (like the Network and Sensors) can keep running.
+            
+            # 3. Cooling loop (Runs without holding the lock hostage)
+            while True:
+                time.sleep(2)
                 
-                # No Orange Pi real, aqui você poderia acionar um GPIO para o cooler
-                # Exemplo conceitual: GPIO.output(PIN, GPIO.HIGH)
-                
-                # Mantém o cooler ligado até baixar 5 graus do limite
-                while True:
-                    time.sleep(2)
-                    current_temp = self._read_cpu_temp()
-                    if current_temp < (self.temp_limit - 5):
-                        break
-                
+                # Briefly grab the lock just to check the current temperature
                 with self.lock:
-                    self.fan_status = "OFF"
-                print("Temperatura normalizada. Cooler desligado.")
+                    current_temp = self.temperature
+                    limit = self.temp_limit
+                    
+                # If it cooled down by just 2 degrees below the limit, turn off the fan
+                if current_temp < (limit):
+                    with self.lock:
+                        self.fan_status = "OFF"
+                    print("[INFO] Temperatura normalizada. Cooler desligado.")
+                    break # Exit the cooling loop and go back to waiting for the next alarm
