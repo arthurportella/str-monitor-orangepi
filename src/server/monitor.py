@@ -46,7 +46,7 @@ class OrangePiMonitor:
             
             time.sleep(2)
 
-def protection_thread_logic(self):
+    def protection_thread_logic(self):
         """Thread 4: Proteção Térmica baseada em Variável de Condição"""
         while True:
             # 1. Wait for the alarm inside the condition block
@@ -69,7 +69,7 @@ def protection_thread_logic(self):
                     limit = self.temp_limit
                     
                 # If it cooled down by just 2 degrees below the limit, turn off the fan
-                if current_temp < (limit):
+                if current_temp < (limit - 2.0):
                     with self.lock:
                         self.fan_status = "OFF"
                     print("[INFO] Temperatura normalizada. Cooler desligado.")
