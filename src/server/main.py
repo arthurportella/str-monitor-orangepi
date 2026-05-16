@@ -56,6 +56,11 @@ def handle_client(conn, addr):
                             "temp": round(monitor.temperature, 1),
                             "fan_status": monitor.fan_status
                         }
+                        
+                        # Check if the mailbox has any alerts from the background threads
+                        if len(monitor.message_queue) > 0:
+                            # Remove the oldest message from the queue and send it to GUI
+                            resposta["message"] = monitor.message_queue.pop(0)
 
                 elif comando == "FAN_ON":
                     with monitor.lock:
@@ -91,7 +96,7 @@ def handle_client(conn, addr):
                             monitor.temperature = 95.0
                             monitor.condition.notify_all()
                         
-                        time.sleep(15) # Hold the heat for 15 seconds!
+                        time.sleep(7) # Hold the heat for 7 seconds!
                         
                         with monitor.lock:
                             monitor.is_stress_testing = False # Let real sensors work again
@@ -99,7 +104,7 @@ def handle_client(conn, addr):
                     # Start the stress test in the background so the GUI doesn't freeze!
                     threading.Thread(target=apply_stress, daemon=True).start()
                     
-                    resposta = {"message": "Stress test at 95C activated for 15 seconds!"}
+                    resposta = {"message": "Stress test at 95C activated for 7 seconds!"}
 
                 # Codifica o dicionário para JSON e envia de volta ao cliente
                 conn.sendall((json.dumps(resposta) + "\n").encode('utf-8'))
