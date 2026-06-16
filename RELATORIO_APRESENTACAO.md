@@ -475,7 +475,7 @@ elif comando == "STRESS_TEST":
             monitor.is_stress_testing = False
     
     threading.Thread(target=apply_stress, daemon=True).start()
-    resposta = {"message": "Stress test at 95C activated for 7 seconds!"}
+    resposta = {"message": "Teste de estresse a ativado, temperatura a 95C por 7 segundos!"}
 ```
 
 ---

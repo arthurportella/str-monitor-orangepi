@@ -12,7 +12,7 @@ class OrangePiMonitor:
         self.temp_limit = 70.0 
         self.is_stress_testing = False
         
-        # ADD THIS: A mailbox for asynchronous messages
+        # Fila de mensagens para o cliente (ex: alertas térmicos)
         self.message_queue = [] 
         
         self.lock = threading.Lock()
@@ -27,6 +27,7 @@ class OrangePiMonitor:
             return 0.0
 
     def sensor_thread_logic(self):
+        """Thread Periódica 1 (Obrigatória): Atualização dos sensores a cada 2s"""
         while True:
             with self.lock:
                 self.cpu_usage = psutil.cpu_percent(interval=None)
@@ -48,7 +49,7 @@ class OrangePiMonitor:
                 self.fan_status = "ON"
                 msg = f"!!! ALERTA TERMICO: {self.temperature:.1f} C !!!"
                 print(msg)
-                self.message_queue.append(msg) # Put message in the mailbox
+                self.message_queue.append(msg)
             
             while True:
                 time.sleep(2)
@@ -62,5 +63,5 @@ class OrangePiMonitor:
                         self.fan_status = "OFF"
                         msg = "[INFO] Temperatura normalizada. Cooler desligado."
                         print(msg)
-                        self.message_queue.append(msg) # Put message in the mailbox
+                        self.message_queue.append(msg)
                     break
